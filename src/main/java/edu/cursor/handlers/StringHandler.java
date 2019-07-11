@@ -1,10 +1,10 @@
-package handlers;
+package edu.cursor.handlers;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class StringHandler {
 
@@ -14,8 +14,9 @@ public class StringHandler {
     private int badWordCount = 0;
     private int goodWordCount = 0;
     private String[] swearing = {"пизд", "ебен"};
+    private String text;
 
-    public void parseFile(String s) {
+    public void parseFile(final String s) {
 
         StringTokenizer st = new StringTokenizer(s, ",:;.\n -");
         totalWordCount = st.countTokens();
@@ -46,48 +47,25 @@ public class StringHandler {
         }
     }
 
-    public void maxGoodOccurrence(int n) {
-        Queue<Integer> queue = new PriorityQueue<>(Comparator.reverseOrder());
-        queue.addAll(occurrences.values());
-
-        Set<String> set = new HashSet<>();
-
-        Set<Map.Entry<String, Integer>> entries = occurrences.entrySet();
-
-        System.out.println("The first " + n + " good words with the biggest occurrence:");
-
-        for (int i = 0; i < n; i++) {
-
-            Integer max = queue.poll();
-            boolean stop = false;
-            Iterator<Map.Entry<String, Integer>> iterator = entries.iterator();
-            while (!stop && iterator.hasNext()) {
-                Map.Entry<String, Integer> e = iterator.next();
-                String key = e.getKey();
-                Integer value = e.getValue();
-
-                if (value.equals(max) && !set.contains(key)) {
-                    set.add(key);
-                    System.out.println(key + " = " + value);
-                    stop = true;
-                }
-            }
-        }
+    public void maxGoodOccurrence(final int n) {
+        System.out.println("The first " + n
+                + " good words with the biggest occurrence:");
+        occurrences.entrySet().stream().
+                sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).
+                limit(n).forEach(System.out::println);
     }
 
 
-    public String readFile(File file) {
-        String st;
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            while ((st = br.readLine()) != null) {
-                sb.append(st);
-                sb.append("\n");
-            }
+    public String readFile(final String path) {
+        String s = "";
+        try {
+            s = Files.lines(Paths.get(path)).map(s1 -> s1 += "\n").
+                    collect(Collectors.joining());
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return sb.toString();
+        text = s;
+        return s;
     }
 
     public int getTotalWordCount() {
@@ -104,5 +82,9 @@ public class StringHandler {
 
     public List<String> getBadWords() {
         return badWords;
+    }
+
+    public String getText() {
+        return text;
     }
 }
