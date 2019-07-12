@@ -9,22 +9,16 @@ import java.util.stream.Collectors;
 public class StringHandler {
 
     private List<String> badWords = new ArrayList<>();
+    private List<String> goodWords;
+    private List<String> songWords;
     private Map<String, Integer> occurrences = new HashMap<>();
-    private int totalWordCount = 0;
-    private int badWordCount = 0;
-    private int goodWordCount = 0;
     private String[] swearing = {"пизд", "ебен"};
     private String text;
 
     public void parseFile(final String s) {
-
-        StringTokenizer st = new StringTokenizer(s, ",:;.\n -");
-        totalWordCount = st.countTokens();
-
-        while (st.hasMoreTokens()) {
-
-            String word = st.nextToken();
-
+        songWords = Arrays
+                .asList(s.split("[\\p{Punct}\\p{Space}]+"));
+        goodWords = songWords.stream().filter(word -> {
             boolean swear = false;
             for (String h : swearing) {
                 if (word.contains(h)) {
@@ -32,19 +26,18 @@ public class StringHandler {
                     break;
                 }
             }
-
             if (swear | word.length() < 3) {
                 badWords.add(word);
-                badWordCount++;
+                return false;
             } else {
-                goodWordCount++;
                 Integer oldCount = occurrences.get(word);
                 if (oldCount == null) {
                     oldCount = 0;
                 }
                 occurrences.put(word, oldCount + 1);
+                return true;
             }
-        }
+        }).collect(Collectors.toList());
     }
 
     public void maxGoodOccurrence(final int n) {
@@ -69,15 +62,15 @@ public class StringHandler {
     }
 
     public int getTotalWordCount() {
-        return totalWordCount;
+        return songWords.size();
     }
 
     public int getBadWordCount() {
-        return badWordCount;
+        return badWords.size();
     }
 
     public int getGoodWordCount() {
-        return goodWordCount;
+        return goodWords.size();
     }
 
     public List<String> getBadWords() {
