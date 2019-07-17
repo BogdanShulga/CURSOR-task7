@@ -15,50 +15,66 @@ public class StringHandler {
     private String[] swearing = {"пизд", "ебен"};
     private String text;
 
-    public void parseFile(final String s) {
-        songWords = Arrays
-                .asList(s.split("[\\p{Punct}\\p{Space}]+"));
-        goodWords = songWords.stream().filter(word -> {
-            boolean swear = false;
-            for (String h : swearing) {
-                if (word.contains(h)) {
-                    swear = true;
-                    break;
-                }
-            }
-            if (swear | word.length() < 3) {
-                badWords.add(word);
-                return false;
-            } else {
-                Integer oldCount = occurrences.get(word);
-                if (oldCount == null) {
-                    oldCount = 0;
-                }
-                occurrences.put(word, oldCount + 1);
-                return true;
-            }
-        }).collect(Collectors.toList());
-    }
-
-    public void maxGoodOccurrence(final int n) {
-        System.out.println("The first " + n
-                + " good words with the biggest occurrence:");
-        occurrences.entrySet().stream().
-                sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).
-                limit(n).forEach(System.out::println);
+    public void handleTextOfSong(final String path) {
+        readFileToString(path);
+        parseTextOfSong();
+        filterSongsWords();
     }
 
 
-    public String readFile(final String path) {
-        String s = "";
+    private void parseTextOfSong() {
+        String regex = "[\\p{Punct}\\p{Space}]+";
+        this.songWords = Arrays
+                .asList(this.text.split(regex));
+    }
+
+    private void filterSongsWords() {
+        this.goodWords = this.songWords.stream()
+                .filter(word -> {
+                    boolean swear = false;
+                    for (String h : this.swearing) {
+                        if (word.contains(h)) {
+                            swear = true;
+                            break;
+                        }
+                    }
+                    boolean result = true;
+                    if (swear | word.length() < 3) {
+                        this.badWords.add(word);
+                        result = false;
+                    } else {
+                        //counting the number of repetitions
+                        // of words in the text of the song
+                        Integer oldCount = this.occurrences.get(word);
+                        if (oldCount == null) {
+                            oldCount = 0;
+                        }
+                        this.occurrences.put(word, oldCount + 1);
+                    }
+                    return result;
+                })
+                .collect(Collectors.toList());
+    }
+
+    public void printMaxGoodWordRepetition(final int n) {
+        occurrences.entrySet().stream()
+            .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+            .limit(n)
+            .forEach(System.out::println);
+    }
+
+    private void readFileToString(final String path) {
         try {
-            s = Files.lines(Paths.get(path)).map(s1 -> s1 += "\n").
-                    collect(Collectors.joining());
+            this.text = Files.lines(Paths.get(path))
+                    .map(s1 -> s1 += "\n")
+                    .collect(Collectors.joining());
         } catch (IOException e) {
             e.printStackTrace();
         }
-        text = s;
-        return s;
+    }
+
+    public void printTextOfSong() {
+        System.out.println(this.text);
     }
 
     public int getTotalWordCount() {
@@ -75,9 +91,5 @@ public class StringHandler {
 
     public List<String> getBadWords() {
         return badWords;
-    }
-
-    public String getText() {
-        return text;
     }
 }
